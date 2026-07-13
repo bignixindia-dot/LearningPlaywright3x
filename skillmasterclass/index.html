@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Skill Masterclass — TheTestingAcademy</title>
+<meta name="description" content="Build AI Agent Skills for the full QA/SDET lifecycle with Claude Code & GitHub Copilot — by TheTestingAcademy." />
+<style>
+  :root{
+    --bg:#F4EFE4; --panel:#FBF7EE; --panel-2:#FFFDF8; --card:#FDFAF3;
+    --ink:#332F28; --ink-soft:#5A544A; --muted:#8A8474; --line:#E6DDC9;
+    --clay:#C8623F; --clay-2:#D97757; --clay-ink:#9C4A2C;
+    --teal:#2E7D74; --teal-2:#3B978C;
+    --code-bg:#2B2723; --code-ink:#EDE4D2; --code-kw:#E0997B; --code-str:#A7C08A;
+    --code-com:#8C826E; --code-num:#D9B45B; --code-fn:#7FB0C7;
+    --shadow:0 1px 0 rgba(120,90,50,.05), 0 10px 30px -18px rgba(80,60,30,.35);
+    --radius:14px;
+  }
+  :root[data-theme="dark"]{
+    --bg:#232019; --panel:#2B2721; --panel-2:#302B24; --card:#322D25;
+    --ink:#EDE4D2; --ink-soft:#CBC1AD; --muted:#9C927E; --line:#413A2F;
+    --clay:#E08A63; --clay-2:#D97757; --clay-ink:#EEA184;
+    --teal:#6FBEB2; --teal-2:#5CB0A3;
+    --shadow:0 1px 0 rgba(0,0,0,.2), 0 14px 34px -20px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#232019; --panel:#2B2721; --panel-2:#302B24; --card:#322D25;
+      --ink:#EDE4D2; --ink-soft:#CBC1AD; --muted:#9C927E; --line:#413A2F;
+      --clay:#E08A63; --clay-ink:#EEA184; --teal:#6FBEB2; --teal-2:#5CB0A3;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--clay-ink); text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:.9em}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:14px;
+    padding:12px 18px; background:color-mix(in srgb, var(--panel) 88%, transparent);
+    backdrop-filter:saturate(1.2) blur(8px); border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
+  .brand .mark{width:30px;height:30px;flex:0 0 30px;border-radius:8px;box-shadow:var(--shadow)}
+  .brand small{display:block;font-weight:600;color:var(--muted);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+  .brand b{font-size:16px}
+  .tabs{display:flex; gap:4px; margin-left:8px; flex-wrap:wrap}
+  .tabs button{
+    border:1px solid transparent; background:transparent; color:var(--ink-soft);
+    padding:7px 13px; border-radius:999px; font-weight:600; font-size:13.5px; cursor:pointer;
+  }
+  .tabs button:hover{background:var(--panel-2)}
+  .tabs button.active{background:var(--clay); color:#fff; box-shadow:var(--shadow)}
+  .spacer{flex:1}
+  .iconbtn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink);
+    width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:15px;display:grid;place-items:center}
+  .iconbtn:hover{border-color:var(--clay)}
+
+  /* ---------- layout ---------- */
+  .shell{display:flex; align-items:flex-start}
+  .sidebar{
+    position:sticky; top:59px; align-self:flex-start;
+    width:264px; flex:0 0 264px; height:calc(100vh - 59px); overflow-y:auto;
+    padding:18px 12px 60px; border-right:1px solid var(--line); background:var(--panel);
+    transition:width .18s ease, transform .18s ease;
+  }
+  .sidebar h5{margin:16px 10px 6px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .navlink{display:flex; gap:9px; align-items:center; padding:8px 10px; border-radius:10px;
+    color:var(--ink-soft); cursor:pointer; font-size:14px; font-weight:500}
+  .navlink:hover{background:var(--panel-2); color:var(--ink)}
+  .navlink.active{background:color-mix(in srgb,var(--clay) 14%,transparent); color:var(--clay-ink); font-weight:700}
+  .navlink .dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex:0 0 7px}
+  .navlink.active .dot{background:var(--clay)}
+  .navgroup{display:none}
+  .navgroup.show{display:block}
+  body.nav-collapsed .sidebar{width:0; flex-basis:0; padding-left:0;padding-right:0; overflow:hidden; border:0}
+
+  .content{flex:1; min-width:0; padding:34px clamp(18px,5vw,64px) 90px; max-width:980px; margin:0 auto}
+  .panel{display:none}
+  .panel.active{display:block; animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- typography ---------- */
+  h1{font-size:clamp(28px,4vw,40px); line-height:1.12; margin:.2em 0 .3em; letter-spacing:-.5px}
+  h2{font-size:26px; margin:2.2em 0 .5em; letter-spacing:-.3px; scroll-margin-top:74px}
+  h3{font-size:19px; margin:1.7em 0 .4em}
+  h2 .num{color:var(--clay); font-variant-numeric:tabular-nums; margin-right:.4em}
+  .lede{font-size:19px; color:var(--ink-soft); max-width:70ch}
+  .kicker{display:inline-block; font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--clay); background:color-mix(in srgb,var(--clay) 12%,transparent); padding:5px 12px; border-radius:999px}
+  p{max-width:72ch}
+  ul,ol{max-width:72ch}
+  li{margin:.28em 0}
+  hr{border:0;border-top:1px solid var(--line); margin:2.4em 0}
+
+  /* ---------- cards / callouts ---------- */
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; box-shadow:var(--shadow); margin:16px 0}
+  .grid{display:grid; gap:16px}
+  .grid.two{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .grid.three{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;
+    background:color-mix(in srgb,var(--teal) 16%,transparent); color:var(--teal); letter-spacing:.03em}
+  .tag.clay{background:color-mix(in srgb,var(--clay) 15%,transparent); color:var(--clay-ink)}
+  .callout{border-left:4px solid var(--clay); background:color-mix(in srgb,var(--clay) 7%,transparent);
+    padding:14px 18px; border-radius:0 12px 12px 0; margin:18px 0}
+  .callout.teal{border-left-color:var(--teal); background:color-mix(in srgb,var(--teal) 8%,transparent)}
+  .callout b{color:var(--clay-ink)}
+  .callout.teal b{color:var(--teal)}
+
+  /* ---------- code ---------- */
+  .code{position:relative; margin:16px 0}
+  .code pre{background:var(--code-bg); color:var(--code-ink); border-radius:12px; padding:18px 18px; margin:0;
+    overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13px; line-height:1.6;
+    box-shadow:var(--shadow); border:1px solid rgba(0,0,0,.25)}
+  .code .copy{position:absolute; top:10px; right:10px; border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08); color:var(--code-ink); font-size:11.5px; font-weight:700;
+    padding:5px 10px; border-radius:8px; cursor:pointer}
+  .code .copy:hover{background:var(--clay); border-color:var(--clay)}
+  .code .lbl{position:absolute; top:10px; left:14px; font-size:11px; color:var(--code-com); font-weight:700; letter-spacing:.08em; text-transform:uppercase}
+  .code.hdr pre{padding-top:36px}
+  .k{color:var(--code-kw)} .s{color:var(--code-str)} .c{color:var(--code-com)} .n{color:var(--code-num)} .f{color:var(--code-fn)}
+
+  /* ---------- table ---------- */
+  .tablewrap{overflow-x:auto; margin:16px 0; border:1px solid var(--line); border-radius:12px}
+  table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px; background:var(--card)}
+  th,td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{background:var(--panel-2); font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
+  tr:last-child td{border-bottom:0}
+  td b{color:var(--clay-ink)}
+
+  /* ---------- diagram ---------- */
+  figure{margin:22px 0; background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:var(--shadow)}
+  figure svg{display:block; width:100%; height:auto; max-width:100%}
+  figcaption{text-align:center; color:var(--muted); font-size:13px; margin-top:8px; font-style:italic}
+  .exc-font{font-family:"Comic Sans MS","Comic Sans","Segoe Print","Bradley Hand","Chalkboard SE","Chalkboard",cursive}
+
+  /* plugin & skill list */
+  .plug{display:flex; gap:14px; align-items:flex-start}
+  .plug .badge{width:44px;height:44px;flex:0 0 44px;border-radius:12px;display:grid;place-items:center;font-size:22px;
+    background:color-mix(in srgb,var(--clay) 12%,transparent)}
+  .plug h3{margin:.1em 0 .2em}
+  .plug .cmd{font-family:"SF Mono",ui-monospace,monospace;font-size:12px;color:var(--teal);font-weight:700}
+  .steps{counter-reset:s; list-style:none; padding-left:0}
+  .steps>li{counter-increment:s; position:relative; padding:2px 0 14px 46px; margin:0}
+  .steps>li::before{content:counter(s); position:absolute; left:0; top:0; width:32px;height:32px; border-radius:50%;
+    background:var(--clay); color:#fff; font-weight:800; display:grid;place-items:center; box-shadow:var(--shadow)}
+  .steps>li:not(:last-child)::after{content:""; position:absolute; left:15px; top:34px; bottom:2px; width:2px; background:var(--line)}
+
+  footer{border-top:1px solid var(--line); background:var(--panel); padding:26px clamp(18px,5vw,64px); color:var(--muted); font-size:13.5px}
+  footer a{color:var(--clay-ink); font-weight:600}
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .mini{font-size:13px;color:var(--muted)}
+  @media(max-width:820px){
+    .sidebar{position:fixed; z-index:35; box-shadow:var(--shadow)}
+    body:not(.nav-collapsed) .sidebar{transform:translateX(0)}
+    body.nav-collapsed .sidebar{transform:translateX(-100%)}
+  }
+</style>
+</head>
+<body class="nav-collapsed-md">
+
+<!-- global excalidraw-style sketch filter (shared by all diagrams) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="sketch"><feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/></filter>
+    <filter id="sketch2"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <button class="iconbtn" id="navToggle" title="Toggle menu" aria-label="Toggle menu">☰</button>
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" aria-label="TheTestingAcademy">
+      <path d="M24.51,28.51H5.49c-2.21,0-4-1.79-4-4V5.49c0-2.21,1.79-4,4-4h19.03c2.21,0,4,1.79,4,4v19.03C28.51,26.72,26.72,28.51,24.51,28.51z" fill="#2D2D2D"/>
+      <path d="M15.47,7.1l-1.3,1.85c-0.2,0.29-0.54,0.47-0.9,0.47h-7.1V7.09C6.16,7.1,15.47,7.1,15.47,7.1z" fill="#fff"/>
+      <polygon points="24.3,7.1 13.14,22.91 5.7,22.91 16.86,7.1" fill="#fff"/>
+      <path d="M14.53,22.91l1.31-1.86c0.2-0.29,0.54-0.47,0.9-0.47h7.09v2.33H14.53z" fill="#fff"/>
+    </svg>
+    <span><small>TheTestingAcademy</small><b>Skill Masterclass</b></span>
+  </div>
+  <div class="tabs" id="tabs">
+    <button data-tab="masterclass" class="active">Masterclass</button>
+    <button data-tab="plugins">Top 10 Plugins</button>
+    <button data-tab="qaskills">qaskills.sh</button>
+    <button data-tab="store">Store &amp; Host</button>
+  </div>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">◐</button>
+</header>
+
+<div class="shell">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="navgroup show" data-group="masterclass">
+      <h5>The Masterclass</h5>
+      <div class="navlink active" data-go="s-what"><span class="dot"></span>What is a Skill?</div>
+      <div class="navlink" data-go="s-vs"><span class="dot"></span>Skill vs Prompt</div>
+      <div class="navlink" data-go="s-anatomy"><span class="dot"></span>Anatomy of a Skill</div>
+      <div class="navlink" data-go="s-first"><span class="dot"></span>Your First Skill</div>
+      <div class="navlink" data-go="s-stlc"><span class="dot"></span>The STLC Skill Suite</div>
+      <div class="navlink" data-go="s-packs"><span class="dot"></span>Framework Packs</div>
+      <div class="navlink" data-go="s-adv"><span class="dot"></span>Advanced Skills</div>
+    </div>
+    <div class="navgroup" data-group="plugins">
+      <h5>Plugins</h5>
+      <div class="navlink" data-go="p-top10"><span class="dot"></span>Top 10 for QA / SDET</div>
+      <div class="navlink" data-go="p-install"><span class="dot"></span>Installing plugins</div>
+    </div>
+    <div class="navgroup" data-group="qaskills">
+      <h5>qaskills.sh</h5>
+      <div class="navlink" data-go="q-what"><span class="dot"></span>450+ skill catalog</div>
+      <div class="navlink" data-go="q-use"><span class="dot"></span>Browse &amp; install</div>
+      <div class="navlink" data-go="q-copilot"><span class="dot"></span>Use in Copilot</div>
+    </div>
+    <div class="navgroup" data-group="store">
+      <h5>Store &amp; Host</h5>
+      <div class="navlink" data-go="st-why"><span class="dot"></span>Two storage options</div>
+      <div class="navlink" data-go="st-git"><span class="dot"></span>GitHub as source</div>
+      <div class="navlink" data-go="st-app"><span class="dot"></span>React registry app</div>
+      <div class="navlink" data-go="st-prompt"><span class="dot"></span>The build prompt</div>
+    </div>
+  </aside>
+
+  <main class="content">
+
+  <!-- ==================================================================== -->
+  <!-- TAB 1 : MASTERCLASS                                                    -->
+  <!-- ==================================================================== -->
+  <section class="panel active" data-panel="masterclass">
+    <span class="kicker">Agent Skills · Claude Code + GitHub Copilot</span>
+    <h1>Build QA Skills your AI actually knows how to use.</h1>
+    <p class="lede">A skill is a small folder that teaches an AI agent to do one job well — every time, the same way, with the checklists and scripts a senior tester would use. In this masterclass you build a real one, then a whole suite for the software testing lifecycle.</p>
+    <div class="pill-row">
+      <span class="tag clay">Claude Code</span><span class="tag">GitHub Copilot</span>
+      <span class="tag clay">agentskills.io</span><span class="tag">14 STLC + 22 framework skills</span><span class="tag clay">Human-in-the-loop</span>
+    </div>
+
+    <h2 id="s-what"><span class="num">01</span>What is a Skill?</h2>
+    <p>An <b>Agent Skill</b> is a folder containing a <code>SKILL.md</code> file (plus optional scripts, references and assets) that packages <em>expertise + instructions + resources</em> an AI agent loads <b>on demand</b> to perform a specific task.</p>
+    <div class="callout teal">
+      <b>The onboarding analogy.</b> A prompt is shouting instructions at a new hire every single time. A skill is handing them a runbook, a checklist, and the exact scripts — once — so they do the job like your best tester, without you in the room.
+    </div>
+    <div class="grid three">
+      <div class="card"><h3>📦 Packaged</h3><p class="mini">Instructions, reference docs, and runnable scripts travel together in one folder.</p></div>
+      <div class="card"><h3>🔎 Discovered</h3><p class="mini">The agent reads only the <code>description</code> until your task matches — then it loads the rest. Progressive disclosure keeps context cheap.</p></div>
+      <div class="card"><h3>♻️ Reusable</h3><p class="mini">Version it, share it over git or a registry, compose it with other skills. Write once, use forever.</p></div>
+    </div>
+    <figure>
+      <!-- D3 progressive disclosure -->
+      <svg viewBox="0 0 720 200" role="img" aria-label="How a skill loads: name and description, then body, then files">
+        <g filter="url(#sketch)" class="exc-font">
+          <rect x="24" y="60" width="180" height="80" rx="10" fill="#a5d8ff" fill-opacity=".5" stroke="#1971c2" stroke-width="2"/>
+          <text x="114" y="92" text-anchor="middle" font-size="15" fill="#0b4a86">name + description</text>
+          <text x="114" y="114" text-anchor="middle" font-size="11" fill="#0b4a86">always in context (cheap)</text>
+
+          <rect x="270" y="60" width="170" height="80" rx="10" fill="#ffec99" fill-opacity=".55" stroke="#e8a90a" stroke-width="2"/>
+          <text x="355" y="92" text-anchor="middle" font-size="15" fill="#7a5b00">SKILL.md body</text>
+          <text x="355" y="114" text-anchor="middle" font-size="11" fill="#7a5b00">loaded when triggered</text>
+
+          <rect x="506" y="60" width="190" height="80" rx="10" fill="#b2f2bb" fill-opacity=".5" stroke="#2f9e44" stroke-width="2"/>
+          <text x="601" y="88" text-anchor="middle" font-size="15" fill="#1f6b32">references / scripts</text>
+          <text x="601" y="110" text-anchor="middle" font-size="11" fill="#1f6b32">read only if needed</text>
+
+          <path d="M206 100 L266 100" stroke="#7a6b52" stroke-width="2.5" marker-end="url(#arw)"/>
+          <path d="M442 100 L502 100" stroke="#7a6b52" stroke-width="2.5" marker-end="url(#arw)"/>
+        </g>
+        <defs><marker id="arw" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#7a6b52"/></marker></defs>
+      </svg>
+      <figcaption>Progressive disclosure — the agent pays for detail only when the task demands it.</figcaption>
+    </figure>
+
+    <h2 id="s-vs"><span class="num">02</span>Skill vs Prompt</h2>
+    <p>A prompt is a message. A skill is a capability. The difference is <b>reuse, discovery, and packaged resources</b>.</p>
+    <figure>
+      <svg viewBox="0 0 720 260" role="img" aria-label="Prompt versus Skill comparison">
+        <g filter="url(#sketch)" class="exc-font">
+          <rect x="20" y="24" width="320" height="212" rx="14" fill="#ffc9c9" fill-opacity=".35" stroke="#e03131" stroke-width="2"/>
+          <text x="180" y="52" text-anchor="middle" font-size="18" fill="#b3201f">🗯️ PROMPT</text>
+          <text x="44" y="88" font-size="13" fill="#7a2020">• Typed fresh every time</text>
+          <text x="44" y="116" font-size="13" fill="#7a2020">• Lives in your head / notes</text>
+          <text x="44" y="144" font-size="13" fill="#7a2020">• No files, no scripts</text>
+          <text x="44" y="172" font-size="13" fill="#7a2020">• Not discoverable</text>
+          <text x="44" y="200" font-size="13" fill="#7a2020">• Drifts — you forget a step</text>
+
+          <rect x="380" y="24" width="320" height="212" rx="14" fill="#b2f2bb" fill-opacity=".4" stroke="#2f9e44" stroke-width="2"/>
+          <text x="540" y="52" text-anchor="middle" font-size="18" fill="#1f6b32">🧩 SKILL</text>
+          <text x="404" y="88" font-size="13" fill="#1f6b32">• Written once, reused forever</text>
+          <text x="404" y="116" font-size="13" fill="#1f6b32">• A versioned folder in git</text>
+          <text x="404" y="144" font-size="13" fill="#1f6b32">• Bundles refs + runnable scripts</text>
+          <text x="404" y="172" font-size="13" fill="#1f6b32">• Auto-triggered by description</text>
+          <text x="404" y="200" font-size="13" fill="#1f6b32">• Guardrails baked in — no drift</text>
+        </g>
+      </svg>
+      <figcaption>Same instruction, but a skill remembers, ships, and enforces it.</figcaption>
+    </figure>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th></th><th>Prompt</th><th>Agent Skill</th></tr></thead>
+        <tbody>
+          <tr><td><b>Lifespan</b></td><td>One message</td><td>Reusable, versioned</td></tr>
+          <tr><td><b>Discovery</b></td><td>You must remember to type it</td><td>Agent loads it when the task matches the description</td></tr>
+          <tr><td><b>Resources</b></td><td>Text only</td><td>Templates, checklists, runnable scripts, assets</td></tr>
+          <tr><td><b>Sharing</b></td><td>Copy-paste</td><td>git clone / registry / npm install</td></tr>
+          <tr><td><b>Consistency</b></td><td>Varies per person &amp; mood</td><td>Same workflow &amp; guardrails every run</td></tr>
+          <tr><td><b>Composition</b></td><td>Hard</td><td>Skills call other skills &amp; scripts</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout"><b>Rule of thumb:</b> if you have pasted the same instruction more than twice, it wants to be a skill.</div>
+
+    <h2 id="s-anatomy"><span class="num">03</span>Anatomy of a Skill</h2>
+    <p>Every skill is a folder. The only required file is <code>SKILL.md</code> — YAML frontmatter followed by a Markdown body.</p>
+    <figure>
+      <svg viewBox="0 0 720 300" role="img" aria-label="Folder anatomy of a skill">
+        <g filter="url(#sketch2)" class="exc-font">
+          <rect x="20" y="24" width="250" height="252" rx="12" fill="#fff9db" stroke="#e8a90a" stroke-width="2"/>
+          <text x="40" y="52" font-size="15" fill="#7a5b00">📁 test-plan-generator/</text>
+          <text x="58" y="84" font-size="13" fill="#3b3b3b">📄 SKILL.md  ⭐ required</text>
+          <text x="58" y="112" font-size="13" fill="#3b3b3b">📁 references/</text>
+          <text x="78" y="134" font-size="12" fill="#6b6b6b">checklist.md</text>
+          <text x="78" y="154" font-size="12" fill="#6b6b6b">template.md</text>
+          <text x="58" y="182" font-size="13" fill="#3b3b3b">📁 scripts/</text>
+          <text x="78" y="204" font-size="12" fill="#6b6b6b">fetch_jira.sh</text>
+          <text x="58" y="232" font-size="13" fill="#3b3b3b">📁 copilot/</text>
+          <text x="78" y="254" font-size="12" fill="#6b6b6b">*.prompt.md</text>
+
+          <path d="M272 150 L318 150" stroke="#7a6b52" stroke-width="2.5" marker-end="url(#arw)"/>
+
+          <rect x="322" y="30" width="376" height="120" rx="10" fill="#e7f0ff" stroke="#1971c2" stroke-width="2"/>
+          <text x="342" y="56" font-size="13" fill="#0b4a86">--- FRONTMATTER (YAML) ---</text>
+          <text x="342" y="80" font-size="12.5" fill="#0b4a86">name: test-plan-generator</text>
+          <text x="342" y="102" font-size="12.5" fill="#0b4a86">description: when + what  ← the trigger</text>
+          <text x="342" y="124" font-size="12.5" fill="#0b4a86">license / metadata</text>
+
+          <rect x="322" y="162" width="376" height="114" rx="10" fill="#e9fbe9" stroke="#2f9e44" stroke-width="2"/>
+          <text x="342" y="188" font-size="13" fill="#1f6b32">--- BODY (Markdown) ---</text>
+          <text x="342" y="210" font-size="12.5" fill="#1f6b32">## When to use</text>
+          <text x="342" y="230" font-size="12.5" fill="#1f6b32">## Workflow (numbered)</text>
+          <text x="342" y="250" font-size="12.5" fill="#1f6b32">## Output shape</text>
+          <text x="342" y="270" font-size="12.5" fill="#1f6b32">## Guardrails + human review</text>
+        </g>
+      </svg>
+      <figcaption>Frontmatter is <em>discovery</em>; body is <em>behavior</em>; the extra files are <em>tools</em>.</figcaption>
+    </figure>
+
+    <div class="code hdr">
+      <span class="lbl">SKILL.md</span>
+      <button class="copy">Copy</button>
+<pre><span class="c">---</span>
+<span class="k">name</span>: test-plan-generator
+<span class="k">description</span>: <span class="s">&gt;-
+  Turn a JIRA ticket into a review-ready test plan. Use when someone says
+  "write a test plan for JIRA-1234", pastes a story, or asks what to test.
+  Fetches the ticket, finds gaps, drafts the plan, stops for human review.</span>
+<span class="k">license</span>: MIT
+<span class="k">metadata</span>:
+  <span class="k">author</span>: TheTestingAcademy
+  <span class="k">stlc-phase</span>: Test Planning
+<span class="c">---</span>
+
+<span class="k"># Test Plan Generator</span>
+
+<span class="k">## When to use</span>
+- A JIRA key or story is provided and testing must be planned.
+
+<span class="k">## Workflow</span>
+1. Fetch the ticket (JIRA MCP tool, or scripts/fetch_jira.sh, or ask to paste).
+2. Gap analysis against references/requirement-checklist.md.
+3. Draft the plan into references/test-plan-template.md.
+4. STOP at a Human Review Gate — never mark it final.
+
+<span class="k">## Guardrails</span>
+- Never fabricate acceptance criteria; a missing AC is a finding.
+- A human owns sign-off.</pre>
+    </div>
+    <div class="callout"><b>Write the description like a search query the future-you would type.</b> Third person, concrete trigger phrases ("write a test plan for…", "find gaps in JIRA-123"). This one field decides whether the skill ever fires.</div>
+    <h3>Where skills live</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Tool</th><th>Location</th><th>Format</th></tr></thead>
+      <tbody>
+        <tr><td><b>Claude Code</b> (personal)</td><td><code>~/.claude/skills/&lt;name&gt;/SKILL.md</code></td><td>SKILL.md</td></tr>
+        <tr><td><b>Claude Code</b> (project)</td><td><code>.claude/skills/&lt;name&gt;/SKILL.md</code></td><td>SKILL.md</td></tr>
+        <tr><td><b>GitHub Copilot</b></td><td><code>.github/prompts/&lt;name&gt;.prompt.md</code></td><td>Prompt file (<code>/name</code> in Copilot Chat)</td></tr>
+        <tr><td><b>Copilot repo rules</b></td><td><code>.github/copilot-instructions.md</code></td><td>Always-on instructions</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="s-first"><span class="num">04</span>Your First Skill — Test Plan Generator</h2>
+    <p class="lede">The goal: hand it a JIRA ticket, and it fetches the ticket, reviews it, <b>finds the missing pieces</b>, fills the team's test-plan template, and then <b>stops and asks a human to approve</b> before going further.</p>
+    <figure>
+      <!-- D5 flow -->
+      <svg viewBox="0 0 720 250" role="img" aria-label="Test plan generator flow">
+        <g filter="url(#sketch)" class="exc-font">
+          <rect x="18" y="100" width="120" height="60" rx="10" fill="#a5d8ff" fill-opacity=".55" stroke="#1971c2" stroke-width="2"/>
+          <text x="78" y="128" text-anchor="middle" font-size="13" fill="#0b4a86">JIRA</text>
+          <text x="78" y="146" text-anchor="middle" font-size="11" fill="#0b4a86">ticket</text>
+
+          <rect x="176" y="100" width="130" height="60" rx="10" fill="#ffec99" fill-opacity=".6" stroke="#e8a90a" stroke-width="2"/>
+          <text x="241" y="126" text-anchor="middle" font-size="13" fill="#7a5b00">Analyze &amp;</text>
+          <text x="241" y="146" text-anchor="middle" font-size="13" fill="#7a5b00">find gaps</text>
+
+          <rect x="344" y="100" width="130" height="60" rx="10" fill="#ffd8a8" fill-opacity=".7" stroke="#e8590c" stroke-width="2"/>
+          <text x="409" y="126" text-anchor="middle" font-size="13" fill="#8a3b06">Draft plan</text>
+          <text x="409" y="146" text-anchor="middle" font-size="11" fill="#8a3b06">from template</text>
+
+          <rect x="512" y="86" width="180" height="88" rx="12" fill="#d0bfff" fill-opacity=".55" stroke="#7048e8" stroke-width="2.5"/>
+          <text x="602" y="118" text-anchor="middle" font-size="14" fill="#4b2fa8">🚦 HUMAN</text>
+          <text x="602" y="140" text-anchor="middle" font-size="14" fill="#4b2fa8">REVIEW GATE</text>
+          <text x="602" y="160" text-anchor="middle" font-size="10.5" fill="#4b2fa8">approve or edit</text>
+
+          <path d="M140 130 L172 130" stroke="#7a6b52" stroke-width="2.5" marker-end="url(#arw)"/>
+          <path d="M308 130 L340 130" stroke="#7a6b52" stroke-width="2.5" marker-end="url(#arw)"/>
+          <path d="M476 130 L508 130" stroke="#7a6b52" stroke-width="2.5" marker-end="url(#arw)"/>
+          <text x="241" y="72" text-anchor="middle" font-size="11" fill="#b3201f">⚠ missing ACs, edge cases, roles, data</text>
+          <path d="M241 80 L241 96" stroke="#e03131" stroke-width="1.6" marker-end="url(#arw)"/>
+        </g>
+      </svg>
+      <figcaption>The value isn't the plan — it's the gaps surfaced <em>before</em> the code ships, and the human still owning sign-off.</figcaption>
+    </figure>
+
+    <h3>Step 1 — Scaffold the folder</h3>
+    <div class="code"><button class="copy">Copy</button>
+<pre><span class="c"># Claude Code — personal skills live here</span>
+mkdir -p ~/.claude/skills/test-plan-generator/{references,scripts,copilot}
+cd ~/.claude/skills/test-plan-generator
+$EDITOR SKILL.md</pre></div>
+
+    <h3>Step 2 — Write <code>SKILL.md</code></h3>
+    <p>Use the frontmatter + body from <a href="#s-anatomy">§03</a>. The four workflow steps <em>are</em> the skill: fetch → find gaps → draft → review gate.</p>
+
+    <h3>Step 3 — Add the resources it reaches for</h3>
+    <div class="grid two">
+      <div class="card"><span class="tag">references/requirement-checklist.md</span><p class="mini">The gap-analysis checklist — functional, data, non-functional, clarity. Every ⚠️/❌ becomes a question for the ticket author.</p></div>
+      <div class="card"><span class="tag">references/test-plan-template.md</span><p class="mini">Scope · <b>Gaps &amp; Questions</b> · Scenarios (P0/P1/P2) · Data &amp; Env · Risks · Entry/Exit · <b>Human Review Gate</b>.</p></div>
+    </div>
+    <div class="code hdr"><span class="lbl">scripts/fetch_jira.sh</span><button class="copy">Copy</button>
+<pre><span class="c">#!/usr/bin/env bash</span>
+<span class="c"># Usage: ./fetch_jira.sh VOC-1234   (needs JIRA_BASE_URL, JIRA_EMAIL, JIRA_TOKEN)</span>
+<span class="k">set</span> -euo pipefail
+KEY=<span class="s">"${1:?usage: fetch_jira.sh &lt;ISSUE-KEY&gt;}"</span>
+curl -sS -u <span class="s">"${JIRA_EMAIL}:${JIRA_TOKEN}"</span> -H <span class="s">"Accept: application/json"</span> \
+  <span class="s">"${JIRA_BASE_URL}/rest/api/3/issue/${KEY}?fields=summary,description,acceptance,components,issuelinks"</span> \
+  | jq <span class="s">'{key,summary:.fields.summary,description:.fields.description}'</span></pre></div>
+    <div class="callout teal"><b>No JIRA access?</b> The skill degrades gracefully: prefer a JIRA MCP tool → fall back to the script → fall back to "paste the ticket". It never invents ticket content.</div>
+
+    <h3>Step 4 — The same skill in GitHub Copilot</h3>
+    <p>Copilot doesn't read <code>SKILL.md</code>. Its equivalent is a <b>prompt file</b> — drop it at <code>.github/prompts/test-plan.prompt.md</code> and run <code>/test-plan VOC-1234</code> in Copilot Chat.</p>
+    <div class="code hdr"><span class="lbl">.github/prompts/test-plan.prompt.md</span><button class="copy">Copy</button>
+<pre><span class="c">---</span>
+<span class="k">mode</span>: agent
+<span class="k">description</span>: Generate a review-ready test plan from a JIRA ticket
+<span class="c">---</span>
+You are a senior QA analyst. For ticket <span class="s">${input:ticket}</span>:
+1. Fetch/read it (JIRA tool or ask me to paste — never invent content).
+2. Gap analysis → a "Gaps &amp; Questions for the author" table
+   (missing ACs, edge cases, data, roles, perf/security/a11y, ambiguity).
+3. Draft: Scope · Gaps · Scenarios (P0/P1/P2, each mapped to an AC) ·
+   Data &amp; Env · Risks · Entry/Exit.
+4. STOP at a HUMAN REVIEW GATE — list assumptions &amp; open questions,
+   ask me to approve or edit before writing test cases or automation.</pre></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th></th><th>Claude Code</th><th>GitHub Copilot</th></tr></thead>
+      <tbody>
+        <tr><td><b>File</b></td><td><code>SKILL.md</code> + refs + scripts</td><td><code>*.prompt.md</code></td></tr>
+        <tr><td><b>Trigger</b></td><td>Auto (matches description)</td><td>Manual <code>/test-plan</code></td></tr>
+        <tr><td><b>Bundled files</b></td><td>Yes (references/, scripts/)</td><td>Inline only (link out to repo files)</td></tr>
+        <tr><td><b>Best for</b></td><td>Multi-step, tool-using workflows</td><td>Repo-scoped, in-editor tasks</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><b>Ship it in this repo:</b> the full working skill is in <code>skills/02-test-planning/test-plan-generator/</code> — SKILL.md, both references, the script, and the Copilot prompt.</div>
+
+    <h2 id="s-stlc"><span class="num">05</span>The STLC Skill Suite — 14 skills</h2>
+    <p>One skill is a trick. A <b>suite</b> is a QA teammate. These 14 skills map onto every phase of the Software Testing Life Cycle — and they hand off to each other.</p>
+    <figure>
+      <!-- D4 STLC cycle -->
+      <svg viewBox="0 0 720 380" role="img" aria-label="STLC lifecycle mapped to skills">
+        <g filter="url(#sketch2)" class="exc-font">
+          <ellipse cx="360" cy="190" rx="150" ry="120" fill="none" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 8"/>
+          <!-- phase nodes -->
+          <g>
+            <rect x="270" y="16" width="180" height="46" rx="10" fill="#a5d8ff" fill-opacity=".6" stroke="#1971c2" stroke-width="2"/>
+            <text x="360" y="38" text-anchor="middle" font-size="13" fill="#0b4a86">1 · Requirement Analysis</text>
+            <text x="360" y="54" text-anchor="middle" font-size="10.5" fill="#0b4a86">jira-requirement-analyzer</text>
+          </g>
+          <g>
+            <rect x="500" y="86" width="200" height="46" rx="10" fill="#d0bfff" fill-opacity=".55" stroke="#7048e8" stroke-width="2"/>
+            <text x="600" y="108" text-anchor="middle" font-size="13" fill="#4b2fa8">2 · Test Planning</text>
+            <text x="600" y="124" text-anchor="middle" font-size="10.5" fill="#4b2fa8">test-plan-generator ⭐</text>
+          </g>
+          <g>
+            <rect x="512" y="176" width="196" height="60" rx="10" fill="#99e9f2" fill-opacity=".5" stroke="#0c8599" stroke-width="2"/>
+            <text x="610" y="197" text-anchor="middle" font-size="13" fill="#075866">3 · Test Design</text>
+            <text x="610" y="213" text-anchor="middle" font-size="10.5" fill="#075866">scenario-designer ·</text>
+            <text x="610" y="228" text-anchor="middle" font-size="10.5" fill="#075866">api-test-designer</text>
+          </g>
+          <g>
+            <rect x="480" y="280" width="220" height="60" rx="10" fill="#b2f2bb" fill-opacity=".5" stroke="#2f9e44" stroke-width="2"/>
+            <text x="590" y="300" text-anchor="middle" font-size="13" fill="#1f6b32">4 · Case Development</text>
+            <text x="590" y="316" text-anchor="middle" font-size="10.5" fill="#1f6b32">case-writer · data-generator</text>
+          </g>
+          <g>
+            <rect x="30" y="280" width="230" height="60" rx="10" fill="#ffec99" fill-opacity=".6" stroke="#e8a90a" stroke-width="2"/>
+            <text x="145" y="300" text-anchor="middle" font-size="13" fill="#7a5b00">5 · Execution</text>
+            <text x="145" y="316" text-anchor="middle" font-size="10" fill="#7a5b00">automation-gen · exec-tracker · regression-selector</text>
+          </g>
+          <g>
+            <rect x="14" y="176" width="196" height="60" rx="10" fill="#ffd8a8" fill-opacity=".7" stroke="#e8590c" stroke-width="2"/>
+            <text x="112" y="197" text-anchor="middle" font-size="13" fill="#8a3b06">6 · Defects</text>
+            <text x="112" y="213" text-anchor="middle" font-size="10" fill="#8a3b06">bug-reporter · triage-assistant</text>
+            <text x="112" y="228" text-anchor="middle" font-size="10" fill="#8a3b06">rca-analyzer</text>
+          </g>
+          <g>
+            <rect x="20" y="86" width="200" height="46" rx="10" fill="#ffc9c9" fill-opacity=".55" stroke="#e03131" stroke-width="2"/>
+            <text x="120" y="108" text-anchor="middle" font-size="13" fill="#b3201f">7 · Closure</text>
+            <text x="120" y="124" text-anchor="middle" font-size="10" fill="#b3201f">coverage-analyzer · closure-reporter</text>
+          </g>
+        </g>
+      </svg>
+      <figcaption>Seven STLC phases · fourteen skills · every arrow is a hand-off you no longer do by hand.</figcaption>
+    </figure>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Skill</th><th>STLC phase</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><b>jira-requirement-analyzer</b></td><td>Requirement Analysis</td><td>Reads a ticket, reports gaps/ambiguity/risk + questions for the author</td></tr>
+        <tr><td>2</td><td><b>test-plan-generator</b> ⭐</td><td>Test Planning</td><td>Ticket → gap-checked test plan → human review gate</td></tr>
+        <tr><td>3</td><td><b>test-scenario-designer</b></td><td>Test Design</td><td>Derives positive/negative/boundary/cross-role scenarios, risk-tagged</td></tr>
+        <tr><td>4</td><td><b>api-test-designer</b></td><td>Test Design</td><td>API coverage: schema, auth, negative, boundary, idempotency</td></tr>
+        <tr><td>5</td><td><b>test-case-writer</b></td><td>Case Development</td><td>Expands scenarios into detailed, traceable step-by-step cases</td></tr>
+        <tr><td>6</td><td><b>test-data-generator</b></td><td>Case Development</td><td>Valid / invalid / boundary / synthetic data sets</td></tr>
+        <tr><td>7</td><td><b>automation-script-generator</b></td><td>Execution</td><td>Case → Playwright/Selenium draft with data-testid + web-first asserts</td></tr>
+        <tr><td>8</td><td><b>test-execution-tracker</b></td><td>Execution</td><td>Logs pass/fail/blocked + evidence, summarizes the cycle</td></tr>
+        <tr><td>9</td><td><b>regression-suite-selector</b></td><td>Execution</td><td>Picks a risk-based regression subset for a change</td></tr>
+        <tr><td>10</td><td><b>bug-reporter</b></td><td>Defects</td><td>Structured, reproducible bug report with severity/evidence</td></tr>
+        <tr><td>11</td><td><b>bug-triage-assistant</b></td><td>Defects</td><td>Dedupe, prioritize, route, flag missing info</td></tr>
+        <tr><td>12</td><td><b>rca-analyzer</b></td><td>Defects</td><td>5-Whys + fishbone RCA → corrective &amp; preventive actions</td></tr>
+        <tr><td>13</td><td><b>test-coverage-analyzer</b></td><td>Closure</td><td>Surfaces untested ACs and coverage gaps</td></tr>
+        <tr><td>14</td><td><b>test-closure-reporter</b></td><td>Closure</td><td>Metrics, risks, go/no-go recommendation for sign-off</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><b>All 14 ship in this repo,</b> grouped by phase in numbered STLC folders — <code>skills/01-requirement-analysis/</code> … <code>skills/07-test-closure/</code> (see <code>skills/README.md</code>). Copy any skill folder into <code>~/.claude/skills/</code> and it's live.</div>
+
+    <h2 id="s-packs"><span class="num">06</span>Framework Packs — Playwright &amp; Selenium</h2>
+    <p class="lede">STLC skills plan the work; <b>framework packs</b> do the automation. Two drop-in packs — 11 skills each — turn "automate this" into idiomatic, best-practice code for your stack.</p>
+    <div class="pill-row">
+      <span class="tag clay">playwright-pack · 11</span><span class="tag">selenium-pack · 11</span>
+      <span class="tag clay">no brittle locators</span><span class="tag">no hard waits</span>
+    </div>
+
+    <h3>🎭 Playwright pack <span class="mini">— TypeScript · <code>getByRole</code>/<code>getByTestId</code> · web-first asserts</span></h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Skill</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><b>pw-test-generator</b></td><td>User flow / scenario → Playwright spec with role/testid locators &amp; web-first assertions</td></tr>
+        <tr><td>2</td><td><b>pw-page-object-builder</b></td><td>Page → POM class (getByTestId/getByRole methods, static PATH, ≤50 locators)</td></tr>
+        <tr><td>3</td><td><b>pw-locator-fixer</b></td><td>Rewrites brittle XPath/nth-child/class selectors → resilient getByRole/getByTestId</td></tr>
+        <tr><td>4</td><td><b>pw-fixture-designer</b></td><td>Custom fixtures — auth/session, seeded data, page objects — with proper scope</td></tr>
+        <tr><td>5</td><td><b>pw-api-tester</b></td><td>API tests via request context: schema, auth headers, negative &amp; boundary</td></tr>
+        <tr><td>6</td><td><b>pw-visual-regression</b></td><td>toHaveScreenshot setup, masking dynamic regions, thresholds, baselines</td></tr>
+        <tr><td>7</td><td><b>pw-flaky-debugger</b></td><td>Root-causes races/hard-waits/shared state → web-first fixes + retry/trace advice</td></tr>
+        <tr><td>8</td><td><b>pw-ci-configurator</b></td><td>GitHub Actions: sharding, blob/HTML reporters, trace/video artifacts, matrix</td></tr>
+        <tr><td>9</td><td><b>pw-network-mocker</b></td><td>page.route stubbing, forced error states, deterministic tests</td></tr>
+        <tr><td>10</td><td><b>pw-accessibility-auditor</b></td><td>axe-core checks in tests, violations triaged by severity → WCAG</td></tr>
+        <tr><td>11</td><td><b>pw-trace-analyzer</b></td><td>Reads trace.zip, pinpoints the failing action/assertion, recommends the fix</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>🧫 Selenium pack <span class="mini">— Java · Selenium 4 + TestNG · WebDriverWait, no <code>Thread.sleep</code></span></h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Skill</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><b>se-test-generator</b></td><td>Scenario → Selenium + TestNG (Java) test with explicit waits &amp; stable locators</td></tr>
+        <tr><td>2</td><td><b>se-page-object-builder</b></td><td>POM class (PageFactory <code>@FindBy</code> / explicit) + WebDriverWait, action methods</td></tr>
+        <tr><td>3</td><td><b>se-locator-strategist</b></td><td>Brittle absolute XPath → By.id / cssSelector / relative locators, with trade-offs</td></tr>
+        <tr><td>4</td><td><b>se-wait-fixer</b></td><td>Kills Thread.sleep &amp; implicit/explicit mixing → WebDriverWait / FluentWait</td></tr>
+        <tr><td>5</td><td><b>se-grid-configurator</b></td><td>Selenium Grid 4 (Docker) + RemoteWebDriver for parallel/distributed runs</td></tr>
+        <tr><td>6</td><td><b>se-driver-manager</b></td><td>Selenium Manager / WebDriverManager + thread-safe driver factory &amp; options</td></tr>
+        <tr><td>7</td><td><b>se-framework-scaffolder</b></td><td>Maven + TestNG framework: base test, POM package, config, logging, reporting</td></tr>
+        <tr><td>8</td><td><b>se-flaky-debugger</b></td><td>StaleElementReference / sync / dynamic-element issues → robust fixes</td></tr>
+        <tr><td>9</td><td><b>se-data-driven-designer</b></td><td>TestNG @DataProvider / Excel/CSV/JSON, valid-invalid-boundary data</td></tr>
+        <tr><td>10</td><td><b>se-cross-browser-runner</b></td><td>Chrome/Firefox/Edge matrix via TestNG parameters/factory</td></tr>
+        <tr><td>11</td><td><b>se-report-integrator</b></td><td>Allure / ExtentReports + TestNG listeners, screenshot-on-failure, step logs</td></tr>
+      </tbody>
+    </table></div>
+    <div class="code"><button class="copy">Copy</button>
+<pre><span class="c"># install a whole pack into Claude Code</span>
+cp -r ./skills/framework-packs/playwright-pack/* ~/.claude/skills/
+cp -r ./skills/framework-packs/selenium-pack/*   ~/.claude/skills/
+
+<span class="c"># now just ask:  "automate TC-5 in Playwright"  or  "write a Selenium POM for the login page"</span></pre></div>
+    <div class="callout teal"><b>Same guardrails as the STLC suite:</b> generated code is a <em>draft the engineer runs &amp; reviews</em> — the packs never assume a selector exists and never fabricate a locator.</div>
+
+    <h2 id="s-adv"><span class="num">07</span>Advanced Skills</h2>
+    <div class="grid two">
+      <div class="card"><h3>⛓️ Chained skills</h3><p class="mini">Analyzer → plan → scenarios → cases → automation → execution → bug → RCA → closure. Each skill's output is the next one's input; you review at every gate.</p></div>
+      <div class="card"><h3>🔌 MCP-powered</h3><p class="mini">Wire JIRA, GitHub, Playwright, or a DB as MCP tools so skills act on live systems instead of pasted text.</p></div>
+      <div class="card"><h3>🧪 Self-reviewing</h3><p class="mini">A skill whose last step spawns a sub-agent to adversarially verify its own output before showing you.</p></div>
+      <div class="card"><h3>📊 Report-emitting</h3><p class="mini">Skills that render results to an HTML report (see <code>/showme</code>) or a metrics dashboard for stakeholders.</p></div>
+    </div>
+    <div class="callout teal"><b>Design principle for every advanced skill:</b> more autonomy → more explicit human gates. The smarter the chain, the louder the "approve before I continue".</div>
+  </section>
+
+  <!-- ==================================================================== -->
+  <!-- TAB 2 : PLUGINS                                                        -->
+  <!-- ==================================================================== -->
+  <section class="panel" data-panel="plugins">
+    <span class="kicker">Claude Code plugins &amp; skills</span>
+    <h1 id="p-top10">Top 10 plugins for QA &amp; SDET.</h1>
+    <p class="lede">Skills teach the agent <em>what</em> to do. Plugins change <em>how</em> it works — output style, review depth, browser control, reporting. These ten earn their keep on a testing team.</p>
+
+    <div class="grid two">
+      <div class="card plug"><div class="badge">🪶</div><div>
+        <h3>1 · ponytail <span class="tag clay">anti-bloat</span></h3>
+        <p class="mini">Forces the laziest solution that works — kills over-engineered test frameworks and speculative page-object abstractions before they rot. <span class="cmd">/ponytail · /ponytail-review · /ponytail-audit</span></p></div></div>
+
+      <div class="card plug"><div class="badge">🗿</div><div>
+        <h3>2 · caveman <span class="tag">token saver</span></h3>
+        <p class="mini">Ultra-compressed replies (~75% fewer tokens) with full technical accuracy — longer sessions, cheaper runs. <span class="cmd">/caveman · /caveman-review · /caveman-commit</span></p></div></div>
+
+      <div class="card plug"><div class="badge">🖼️</div><div>
+        <h3>3 · showme <span class="tag clay">reporting</span></h3>
+        <p class="mini">Renders the session's work — diffs, results, analysis — into a styled HTML page. Perfect for test evidence &amp; shareable run reports. <span class="cmd">/showme</span></p></div></div>
+
+      <div class="card plug"><div class="badge">🔍</div><div>
+        <h3>4 · reviewit <span class="tag">review</span></h3>
+        <p class="mini">File-by-file caveman review — per function: what it does, what's needed, what isn't. Great on a test PR. <span class="cmd">/reviewit · /code-review</span></p></div></div>
+
+      <div class="card plug"><div class="badge">🖥️</div><div>
+        <h3>5 · playwright-second-screen <span class="tag">automation</span></h3>
+        <p class="mini">Runs headed Playwright on your 2nd monitor so debugging doesn't hijack your main screen. Local-dev only. <span class="cmd">/playwright-second-screen</span></p></div></div>
+
+      <div class="card plug"><div class="badge">📋</div><div>
+        <h3>6 · qabuddy <span class="tag clay">workflow</span></h3>
+        <p class="mini">Local Kanban QA control-center (port 8787) the agent picks tasks from — track test work end to end. <span class="cmd">/qabuddy</span></p></div></div>
+
+      <div class="card plug"><div class="badge">🌐</div><div>
+        <h3>7 · claude-in-chrome <span class="tag">exploratory</span></h3>
+        <p class="mini">Drive a real Chrome tab — click, fill, screenshot, read console/network. Exploratory + E2E without writing a line first. <span class="cmd">mcp: claude-in-chrome</span></p></div></div>
+
+      <div class="card plug"><div class="badge">📈</div><div>
+        <h3>8 · dataviz <span class="tag">metrics</span></h3>
+        <p class="mini">Accessible, consistent charts for pass-rate trends, defect density, flake dashboards — one design system, light &amp; dark. <span class="cmd">skill: dataviz</span></p></div></div>
+
+      <div class="card plug"><div class="badge">🔬</div><div>
+        <h3>9 · deep-research <span class="tag">research</span></h3>
+        <p class="mini">Fan-out web search + adversarial verification + cited report. Use to vet a tool, a flaky-test cause, or a testing strategy. <span class="cmd">/deep-research</span></p></div></div>
+
+      <div class="card plug"><div class="badge">🚀</div><div>
+        <h3>10 · skillboss <span class="tag clay">deploy</span></h3>
+        <p class="mini">Deploy apps + provision DB/auth/payments on Cloudflare — use it to host your own skill registry (see <a href="#" data-tab-jump="store">Store &amp; Host</a>). <span class="cmd">skill: skillboss</span></p></div></div>
+    </div>
+
+    <h2 id="p-install">Installing a plugin</h2>
+    <p>Claude Code plugins install from a marketplace; skills are just folders you drop in.</p>
+    <div class="code"><button class="copy">Copy</button>
+<pre><span class="c"># inside Claude Code</span>
+/plugin marketplace add owner/repo     <span class="c"># register a marketplace</span>
+/plugin install ponytail               <span class="c"># install a plugin</span>
+/plugin                                <span class="c"># browse installed</span>
+
+<span class="c"># a skill is even simpler — copy the folder</span>
+cp -r ./skills/02-test-planning/test-plan-generator ~/.claude/skills/</pre></div>
+    <div class="callout"><b>QA stack we'd run daily:</b> ponytail + reviewit on every PR, showme for run reports, playwright-second-screen for debugging, dataviz for the weekly metrics deck.</div>
+  </section>
+
+  <!-- ==================================================================== -->
+  <!-- TAB 3 : QASKILLS.SH                                                    -->
+  <!-- ==================================================================== -->
+  <section class="panel" data-panel="qaskills">
+    <span class="kicker">TheTestingAcademy · qaskills.sh</span>
+    <h1 id="q-what">qaskills.sh — 450+ ready QA skills.</h1>
+    <p class="lede">Don't hand-write every skill. <code>qaskills.sh</code> is a curated catalog of 450+ QA / SDET / automation skills — install any of them into Claude Code (or convert to a Copilot prompt) in one line.</p>
+
+    <div class="grid three">
+      <div class="card"><h3>450+</h3><p class="mini">Skills across planning, design, API, mobile, performance, security, accessibility, CI/CD, reporting.</p></div>
+      <div class="card"><h3>One-line install</h3><p class="mini">Pick a skill, drop it into <code>~/.claude/skills/</code>. No build step.</p></div>
+      <div class="card"><h3>Curated</h3><p class="mini">Each skill carries a description, guardrails, and — where useful — references &amp; scripts.</p></div>
+    </div>
+
+    <h2 id="q-use">Browse &amp; install</h2>
+    <ol class="steps">
+      <li><b>List the catalog.</b> Fetch the index and skim by phase or tag.
+        <div class="code"><button class="copy">Copy</button>
+<pre><span class="c"># browse the catalog</span>
+curl -fsSL https://qaskills.sh/index.json | jq '.skills[] | {name, phase, tag}'</pre></div></li>
+      <li><b>Install one skill</b> into Claude Code's skills dir.
+        <div class="code"><button class="copy">Copy</button>
+<pre>curl -fsSL https://qaskills.sh/install.sh | sh -s -- bug-reporter
+<span class="c"># → writes ~/.claude/skills/bug-reporter/SKILL.md (+ any refs/scripts)</span></pre></div></li>
+      <li><b>Or install a whole phase</b> — grab every Test Design skill at once.
+        <div class="code"><button class="copy">Copy</button>
+<pre>curl -fsSL https://qaskills.sh/install.sh | sh -s -- --phase "Test Design"</pre></div></li>
+      <li><b>Verify before you trust.</b> Read the SKILL.md — check the description, the guardrails, and any script it ships — before letting the agent run it.</li>
+    </ol>
+    <div class="callout"><b>Safety first (this is a testing course, after all).</b> Never pipe <code>curl … | sh</code> from a source you haven't read. Prefer <code>curl -o install.sh</code>, open it, <em>then</em> run. Pin a version/commit for reproducible installs.</div>
+
+    <h2 id="q-copilot">Using a qaskills skill in GitHub Copilot</h2>
+    <p>A catalog SKILL.md converts cleanly to a Copilot prompt file — the frontmatter body <em>is</em> the prompt.</p>
+    <div class="code"><button class="copy">Copy</button>
+<pre><span class="c"># pull a skill and convert it to a Copilot prompt file</span>
+curl -fsSL https://qaskills.sh/raw/bug-reporter/SKILL.md \
+  | sed '1,/^---$/d; /^---$/,/^---$/d' \
+  &gt; .github/prompts/bug-reporter.prompt.md
+<span class="c"># then in Copilot Chat:  /bug-reporter</span></pre></div>
+    <div class="callout teal"><b>Workflow we teach:</b> start from a qaskills.sh skill → tweak the description &amp; guardrails for <em>your</em> team → commit it into your repo's <code>.claude/skills/</code> so everyone shares the same behavior.</div>
+  </section>
+
+  <!-- ==================================================================== -->
+  <!-- TAB 4 : STORE & HOST                                                   -->
+  <!-- ==================================================================== -->
+  <section class="panel" data-panel="store">
+    <span class="kicker">The most important part</span>
+    <h1 id="st-why">Store &amp; host your skills.</h1>
+    <p class="lede">A skill on one laptop helps one person. A skill in a repo — or a registry — helps the whole team, forever. Two ways to store, from lazy to full-platform.</p>
+
+    <div class="grid two">
+      <div class="card"><span class="tag">Option A · Lazy</span><h3>GitHub repo of folders</h3><p class="mini">Keep skills as <code>.md</code> files / folders in a git repo. Clone, submodule, or copy into <code>.claude/skills/</code>. Zero infra. Start here.</p></div>
+      <div class="card"><span class="tag clay">Option B · Full</span><h3>React app + database registry</h3><p class="mini">A web UI to browse skills, a DB of metadata, and a CLI/npm installer that pulls a skill straight from the GitHub-backed registry onto any machine.</p></div>
+    </div>
+
+    <h2 id="st-git">Option A — GitHub as the source of truth</h2>
+    <p>The whole "product" is a repo layout + a convention. This is genuinely enough for most teams.</p>
+    <div class="code"><button class="copy">Copy</button>
+<pre>tta-skills/                     <span class="c"># your GitHub repo</span>
+├─ skills/
+│  ├─ README.md                 <span class="c"># the STLC map</span>
+│  ├─ 02-test-planning/test-plan-generator/SKILL.md
+│  ├─ 06-defect-management/bug-reporter/SKILL.md
+│  ├─ framework-packs/playwright-pack/…
+│  └─ …
+└─ registry.json                <span class="c"># name → path → version index</span>
+
+<span class="c"># install a skill on any machine</span>
+git clone https://github.com/TheTestingAcademy/tta-skills
+cp -r tta-skills/skills/02-test-planning/test-plan-generator ~/.claude/skills/
+
+<span class="c"># or wire the whole repo as a git submodule inside a project</span>
+git submodule add https://github.com/TheTestingAcademy/tta-skills .claude/skills-src</pre></div>
+    <div class="callout"><b>Storing as <code>.md</code> vs folders:</b> a flat <code>.md</code> per skill is fine for prompt-only skills. The moment a skill needs a checklist, template, or script, promote it to a folder with <code>SKILL.md</code> + <code>references/</code> + <code>scripts/</code>.</div>
+
+    <h2 id="st-app">Option B — A React registry app</h2>
+    <p>When you outgrow copy-paste: a small web app to browse, search, and one-click install skills — backed by a DB, sourced from the GitHub repo, installable via a CLI.</p>
+    <figure>
+      <!-- D6 architecture -->
+      <svg viewBox="0 0 720 300" role="img" aria-label="Skill registry architecture">
+        <g filter="url(#sketch2)" class="exc-font">
+          <rect x="24" y="120" width="150" height="66" rx="10" fill="#ffec99" fill-opacity=".6" stroke="#e8a90a" stroke-width="2"/>
+          <text x="99" y="148" text-anchor="middle" font-size="13" fill="#7a5b00">GitHub repo</text>
+          <text x="99" y="167" text-anchor="middle" font-size="10.5" fill="#7a5b00">skills/ = truth</text>
+
+          <rect x="214" y="60" width="170" height="66" rx="10" fill="#a5d8ff" fill-opacity=".55" stroke="#1971c2" stroke-width="2"/>
+          <text x="299" y="88" text-anchor="middle" font-size="13" fill="#0b4a86">Registry API</text>
+          <text x="299" y="107" text-anchor="middle" font-size="10.5" fill="#0b4a86">+ DB (metadata)</text>
+
+          <rect x="214" y="180" width="170" height="66" rx="10" fill="#d0bfff" fill-opacity=".55" stroke="#7048e8" stroke-width="2"/>
+          <text x="299" y="208" text-anchor="middle" font-size="13" fill="#4b2fa8">React web UI</text>
+          <text x="299" y="227" text-anchor="middle" font-size="10.5" fill="#4b2fa8">browse · search</text>
+
+          <rect x="430" y="120" width="150" height="66" rx="10" fill="#b2f2bb" fill-opacity=".5" stroke="#2f9e44" stroke-width="2"/>
+          <text x="505" y="148" text-anchor="middle" font-size="13" fill="#1f6b32">CLI / npx</text>
+          <text x="505" y="167" text-anchor="middle" font-size="10.5" fill="#1f6b32">installer</text>
+
+          <rect x="600" y="120" width="104" height="66" rx="10" fill="#ffd8a8" fill-opacity=".7" stroke="#e8590c" stroke-width="2"/>
+          <text x="652" y="148" text-anchor="middle" font-size="12" fill="#8a3b06">~/.claude</text>
+          <text x="652" y="167" text-anchor="middle" font-size="12" fill="#8a3b06">/skills</text>
+
+          <path d="M174 150 L210 100" stroke="#7a6b52" stroke-width="2.4" marker-end="url(#arw)"/>
+          <path d="M174 156 L210 206" stroke="#7a6b52" stroke-width="2.4" marker-end="url(#arw)"/>
+          <path d="M384 96 L505 118" stroke="#7a6b52" stroke-width="2.4" marker-end="url(#arw)"/>
+          <path d="M505 186 L505 120" stroke="#7a6b52" stroke-width="0" />
+          <path d="M580 153 L598 153" stroke="#7a6b52" stroke-width="2.4" marker-end="url(#arw)"/>
+          <text x="470" y="250" text-anchor="middle" font-size="11" fill="#4b2fa8">npx tta-skills install &lt;name&gt;</text>
+        </g>
+      </svg>
+      <figcaption>GitHub stays the source of truth; the API/DB adds search &amp; versions; the CLI does the install.</figcaption>
+    </figure>
+    <h3>The install experience</h3>
+    <div class="code"><button class="copy">Copy</button>
+<pre><span class="c"># one command, from anywhere</span>
+npx tta-skills install test-plan-generator
+<span class="c"># → resolves version from the registry</span>
+<span class="c"># → downloads the folder from the GitHub-backed registry</span>
+<span class="c"># → writes it into ~/.claude/skills/test-plan-generator/</span>
+
+npx tta-skills search "bug"        <span class="c"># find skills</span>
+npx tta-skills list --phase Closure
+npx tta-skills update              <span class="c"># pull latest versions</span></pre></div>
+    <h3>Minimal skill manifest</h3>
+    <div class="code hdr"><span class="lbl">registry.json (per skill)</span><button class="copy">Copy</button>
+<pre>{
+  <span class="s">"name"</span>: <span class="s">"test-plan-generator"</span>,
+  <span class="s">"version"</span>: <span class="s">"1.0.0"</span>,
+  <span class="s">"phase"</span>: <span class="s">"Test Planning"</span>,
+  <span class="s">"description"</span>: <span class="s">"JIRA ticket → review-ready test plan"</span>,
+  <span class="s">"path"</span>: <span class="s">"skills/02-test-planning/test-plan-generator"</span>,
+  <span class="s">"files"</span>: [<span class="s">"SKILL.md"</span>, <span class="s">"references/"</span>, <span class="s">"scripts/"</span>],
+  <span class="s">"author"</span>: <span class="s">"TheTestingAcademy"</span>
+}</pre></div>
+
+    <h2 id="st-prompt">The build prompt (copy → paste into Claude Code / Copilot)</h2>
+    <p>Don't build the registry by hand. Hand this prompt to your agent and let it scaffold the whole thing.</p>
+    <div class="code hdr"><span class="lbl">prompt</span><button class="copy">Copy</button>
+<pre>Build a "TTA Skills Registry" — a skill hosting + install platform.
+
+STACK: React + Vite frontend, a small Node/Express (or Cloudflare Worker) API,
+and SQLite (or D1) for skill metadata. GitHub is the source of truth for skill
+content; the DB only holds searchable metadata + version pointers.
+
+FEATURES
+1. Ingest: a script reads every skills/**/SKILL.md in a GitHub repo (recursive —
+   skills are nested under STLC phase folders), parses the
+   YAML frontmatter (name, description, metadata.stlc-phase, version) and upserts
+   a row per skill into the DB. Runs on a webhook / cron.
+2. Web UI (React): searchable, filterable gallery of skills — card per skill with
+   name, phase tag, description, version, and a "copy install command" button.
+   Cream/warm theme, left sidebar filter by STLC phase. Detail page renders the
+   SKILL.md.
+3. Install API: GET /api/skills (list+search), GET /api/skills/:name (manifest),
+   GET /api/skills/:name/download (zip of the folder pulled from GitHub raw).
+4. CLI (`npx tta-skills`): `install <name>`, `search <q>`, `list [--phase]`,
+   `update`. install resolves the manifest from the API, downloads the folder,
+   and writes it into ~/.claude/skills/<name>/ (respect --dir override).
+5. Publish flow: `tta-skills publish ./skills/my-skill` validates the SKILL.md
+   frontmatter, opens a PR to the GitHub repo.
+
+CONSTRAINTS: no auth for v1 (public read); validate SKILL.md frontmatter with a
+JSON schema before ingest; every install prints the skill's guardrails so the
+user reads them before first run. Ship a README with deploy steps.</pre></div>
+    <div class="callout teal"><b>Lazy path that still works:</b> skip the DB — the GitHub repo + a static <code>registry.json</code> committed alongside the skills is a complete "registry". The CLI reads the raw JSON from GitHub and downloads folders. Add the API/DB only when search over hundreds of skills gets slow.</div>
+  </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="brand" style="margin-bottom:8px">
+    <svg class="mark" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+      <path d="M24.51,28.51H5.49c-2.21,0-4-1.79-4-4V5.49c0-2.21,1.79-4,4-4h19.03c2.21,0,4,1.79,4,4v19.03C28.51,26.72,26.72,28.51,24.51,28.51z" fill="#2D2D2D"/>
+      <polygon points="24.3,7.1 13.14,22.91 5.7,22.91 16.86,7.1" fill="#fff"/>
+    </svg>
+    <b>TheTestingAcademy — Skill Masterclass</b>
+  </div>
+  Learn Manual &amp; Automation Testing · Agent Skills for the full QA lifecycle · Built for Claude Code &amp; GitHub Copilot.<br/>
+  <span class="mini">All 14 STLC skills ship in <code>skills/</code>. Host this page anywhere — it's a single self-contained file.</span>
+</footer>
+
+<script>
+  // ---- theme toggle (respects system, remembers choice for the session) ----
+  var root=document.documentElement, tt=document.getElementById('themeToggle');
+  tt.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    var sysDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+    var next = cur ? (cur==='dark'?'light':'dark') : (sysDark?'light':'dark');
+    root.setAttribute('data-theme',next);
+  });
+
+  // ---- sidebar collapse ----
+  document.getElementById('navToggle').addEventListener('click',function(){
+    document.body.classList.toggle('nav-collapsed');
+  });
+  // start collapsed on narrow screens
+  if(window.innerWidth<820) document.body.classList.add('nav-collapsed');
+
+  // ---- tab switching ----
+  function showTab(id){
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.dataset.panel===id);});
+    document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('active',b.dataset.tab===id);});
+    document.querySelectorAll('.navgroup').forEach(function(g){g.classList.toggle('show',g.dataset.group===id);});
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('#tabs button').forEach(function(b){
+    b.addEventListener('click',function(){showTab(b.dataset.tab);});
+  });
+  document.querySelectorAll('[data-tab-jump]').forEach(function(a){
+    a.addEventListener('click',function(e){e.preventDefault();showTab(a.dataset.tabJump);});
+  });
+
+  // ---- sidebar links: scroll to section, set active ----
+  document.querySelectorAll('.navlink').forEach(function(l){
+    l.addEventListener('click',function(){
+      var el=document.getElementById(l.dataset.go);
+      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+      document.querySelectorAll('.navlink').forEach(function(x){x.classList.remove('active');});
+      l.classList.add('active');
+      if(window.innerWidth<820) document.body.classList.add('nav-collapsed');
+    });
+  });
+
+  // ---- copy buttons ----
+  document.querySelectorAll('.code .copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pre=btn.parentElement.querySelector('pre');
+      var txt=pre.innerText;
+      navigator.clipboard.writeText(txt).then(function(){
+        var old=btn.textContent; btn.textContent='Copied ✓';
+        setTimeout(function(){btn.textContent=old;},1400);
+      });
+    });
+  });
+</script>
+</body>
+</html>
